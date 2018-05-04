@@ -18,6 +18,7 @@ object Dependencies {
     "com.twitter" %% "chill-akka" % "0.9.2",
     "com.lightbend.akka.management" %% "akka-management" % "0.12.0",
     "com.lightbend.akka.management" %% "akka-management-cluster-bootstrap" % "0.12.0",
-    "com.lightbend.akka.discovery" %% "akka-discovery-dns" % "0.12.0"
+    "com.lightbend.akka.discovery" %% "akka-discovery-dns" % "0.12.0",
+    "com.lightbend.akka.management" %% "akka-management-cluster-http" % "0.12.0"
   )
 }
