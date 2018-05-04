@@ -15,6 +15,7 @@ object Dependencies {
     "com.github.jknack" % "handlebars" % "4.0.6",
     "com.github.jknack" % "handlebars-jackson2" % "4.0.6",
     "org.json4s" %% "json4s-jackson" % "3.5.3",
-    "com.twitter" %% "chill-akka" % "0.9.2"
+    "com.twitter" %% "chill-akka" % "0.9.2",
+    "com.lightbend.akka.management" %% "akka-management" % "0.12.0"
   )
 }
