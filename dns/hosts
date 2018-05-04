@@ -1,0 +1,5 @@
+# use this hosts entries with dnsmasq
+127.0.0.10 	node1.mycluser.local nodes.mycluser.local
+127.0.0.12      node2.mycluser.local nodes.mycluser.local
+127.0.0.14      node3.mycluser.local nodes.mycluser.local
+
