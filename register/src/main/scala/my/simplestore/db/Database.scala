@@ -10,20 +10,16 @@ import org.mapdb._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
-class Database private (collectionName:String) extends FromConfig {
+class Database private (collectionName:String,
+                        val databaseEngine: DatabaseEngine = DatabaseEngine
+                       ) extends FromConfig {
 
   import Database._
 
   implicit val formats = org.json4s.DefaultFormats
 
-  lazy val file = settings.getString("file")+"_"+collectionName
-
-  protected lazy val db = DBMaker.fileDB(file).make()
-
   protected val map:concurrent.Map[String,String] =
-    db.treeMap(collectionName,Serializer.STRING,Serializer.STRING).createOrOpen().asScala
-
-  private def close() = db.close()
+    databaseEngine.db.treeMap(collectionName,Serializer.STRING,Serializer.STRING).createOrOpen().asScala
 
   def write[A <: DbOrm](key:String, item: A) =
     map.update(key,compact(render(Extraction.decompose(item))))
@@ -65,7 +61,6 @@ object Database {
 
   def cleanAll = {
     for ((k, v) <- databases) {
-      v.close()
       databases -= k
     }
   }

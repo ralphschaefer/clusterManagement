@@ -13,6 +13,13 @@ object Main extends App {
 
 
   webserver.unbind()
-  db.Database.cleanAll
+  println("unbind")
+  akkaArtifacts.shutdown
+  println("akka shutdoen")
+  Database.cleanAll
+  println("clean all collections")
+  DatabaseEngine.close()
+  println("shutdown db")
+
 
 }
