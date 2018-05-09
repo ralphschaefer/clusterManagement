@@ -21,8 +21,22 @@ lazy val common = (project in file("common"))
     assemblyJarName in assembly := "common.jar",
     assemblySettings,
     name := "common",
-    libraryDependencies ++= commonLibs,
+    libraryDependencies ++= commonLibs
   )
+
+lazy val register = (project in file("register"))
+  .settings(
+    inThisBuild(
+      commonSettings
+    ),
+    assemblyJarName in assembly := "register.jar",
+    assemblySettings,
+    name := "register",
+    libraryDependencies ++= commonLibs ++ Seq(
+      "org.mapdb" % "mapdb" % "3.0.5"
+    )
+  )
+  .dependsOn(common)
 
 lazy val root = (project in file("."))
   .settings(
@@ -32,13 +46,13 @@ lazy val root = (project in file("."))
     assemblyJarName in assembly := "seedless.jar",
     assemblySettings,
     name := "seedless",
-    libraryDependencies ++= commonLibs,
+    libraryDependencies ++= commonLibs
   )
   .dependsOn(common)
 
 
 lazy val allProjects=Seq(
-  common, root
+  common, register, root
 ).map(_.id)
 
 addCommandAlias("cleanAll", allProjects.map(name => s"; $name/clean").mkString)
