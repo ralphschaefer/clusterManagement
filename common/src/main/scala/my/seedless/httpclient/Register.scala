@@ -1,6 +1,6 @@
 package my.seedless.httpclient
 
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, ActorRef, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
@@ -32,13 +32,10 @@ class Register(collection:String) extends Actor {
       parse(bytes.utf8String).extract[A]
     )
 
-  class ConvertActor(cnv: ResponseEntity => Future[ApiMessage]) extends Actor {
+  class ConvertActor(cnv: ResponseEntity => Future[ApiMessage], receiver: ActorRef) extends Actor {
     def receive = {
       case HttpResponse(StatusCodes.OK, _, entity, _) =>
-        cnv(entity).foreach{msg =>
-          println(msg)
-          sender ! msg
-        }
+        cnv(entity).foreach( msg => receiver ! msg )
         context.stop(self)
       case HttpResponse(code,_,_,_) =>
         println(s"ERROR from server : $code")
@@ -46,10 +43,13 @@ class Register(collection:String) extends Actor {
     }
   }
 
+  object ConvertActor {
+    def props[A <: ApiMessage](cnv: ResponseEntity => Future[A], receiver: ActorRef) = Props(new ConvertActor(cnv, receiver))
+  }
+
 
   def receive = {
     case Register.List =>
-      println("LIST :"+uri)
       http.singleRequest(
        HttpRequest(
          method = HttpMethods.GET,
@@ -57,9 +57,7 @@ class Register(collection:String) extends Actor {
          entity = HttpEntity.empty(ContentTypes.`application/json`)
        )
       ).pipeTo(
-        context.system.actorOf(
-          Props(new ConvertActor(convert[webserver.All]))
-        )
+        context.system.actorOf(ConvertActor.props(convert[webserver.All], sender))
       )
     case Register.Create(node) =>
       http.singleRequest(
@@ -74,9 +72,7 @@ class Register(collection:String) extends Actor {
          )
        )
       ).pipeTo(
-        context.system.actorOf(
-          Props(new ConvertActor(convert[webserver.WriteResult]))
-        )
+        context.system.actorOf(ConvertActor.props(convert[webserver.WriteResult], sender))
       )
     case Register.Query(id) =>
       http.singleRequest(
@@ -86,9 +82,7 @@ class Register(collection:String) extends Actor {
          entity = HttpEntity.empty(ContentTypes.`application/json`)
        )
       ).pipeTo(
-        context.system.actorOf(
-          Props(new ConvertActor(convert[webserver.Item]))
-        )
+        context.system.actorOf(ConvertActor.props(convert[webserver.Item], sender))
       )
     case Register.Delete(id) =>
       http.singleRequest(
@@ -98,9 +92,7 @@ class Register(collection:String) extends Actor {
          entity = HttpEntity.empty(ContentTypes.`application/json`)
        )
       ).pipeTo(
-        context.system.actorOf(
-          Props(new ConvertActor(convert[webserver.DeleteResult]))
-        )
+        context.system.actorOf(ConvertActor.props(convert[webserver.DeleteResult], sender))
       )
     case m:ApiMessage =>
       sender ! m

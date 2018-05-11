@@ -20,9 +20,11 @@ class Webserver(akkaArtifacts: AkkaArtifacts)
       complete("registration Servive")
     } ~
     pathPrefix("demo") {
+      print("(demo) ")
       new WebserverRouteProducer[Demo]("demo").route
     } ~
     pathPrefix("clusternodes") {
+      print("(clusternodes) ")
       new WebserverRouteProducer[ClusterNode]("clusterRegistration").route
     }
 

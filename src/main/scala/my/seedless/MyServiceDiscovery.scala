@@ -1,29 +1,32 @@
 package my.seedless
 
-import akka.actor.ActorSystem
 import akka.discovery.SimpleServiceDiscovery.ResolvedTarget
-
 import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.Future
-import akka.discovery.{SimpleServiceDiscovery, dns}
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
+import akka.discovery.SimpleServiceDiscovery
+import my.seedless.api.entities.ClusterNode
+import my.seedless.api.webserver.All
+import org.json4s._
+import org.json4s.jackson.JsonMethods._
 
 class MyServiceDiscovery extends SimpleServiceDiscovery {
 
+  implicit val formats = org.json4s.DefaultFormats
+
   override def lookup(name: String, resolveTimeout: FiniteDuration): Future[SimpleServiceDiscovery.Resolved] = {
-    if (name == "nodes.mycluster.local") {
-      Future{
-        SimpleServiceDiscovery.Resolved(name,collection.immutable.Seq(
-          ResolvedTarget("127.0.0.12",None),
-          ResolvedTarget("127.0.0.14",None)
-        ))
+
+    implicit val ec: ExecutionContext = NodeRegistry.getEc
+
+    // ignore name by now
+
+    NodeRegistry.list().map { res =>
+      val JObject(lst:List[JField]) = res.asInstanceOf[All].list
+      val targets = lst.map { node =>
+        val n = node._2.extract[ClusterNode]
+        ResolvedTarget(n.host,Some(n.port))
       }
+      SimpleServiceDiscovery.Resolved(name,targets)
     }
-    else
-      Future{
-        SimpleServiceDiscovery.Resolved(name,collection.immutable.Seq())
-      }
   }
 
-  println("init MyDns")
 }

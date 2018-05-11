@@ -24,7 +24,6 @@ class WebserverRouteProducer[A <: Payload](dbName:String)(implicit m: Manifest[A
       )
     )
 
-
   protected def read(id:String):Item = Item(
     db.read[Entity[A]](id).map(_.payload.toJson)
   )
@@ -42,10 +41,12 @@ class WebserverRouteProducer[A <: Payload](dbName:String)(implicit m: Manifest[A
   val route:Route =
     pathEndOrSingleSlash {
       get {
+        println(s"QUERY")
         complete(all())
       } ~
       post {
         entity(as[WriteRequest]) { item =>
+          println(s"CREATE: $item")
           complete(
             write(item.item.extract[A])
           )
@@ -54,9 +55,11 @@ class WebserverRouteProducer[A <: Payload](dbName:String)(implicit m: Manifest[A
     } ~
     path(Segment) { id =>
       get {
+        println(s"GET: $id")
         complete(read(id))
       } ~
       delete {
+        println(s"DELETE: $id")
         complete(remove(id))
       }
     }

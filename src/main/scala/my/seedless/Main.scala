@@ -3,8 +3,10 @@ package my.seedless
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.cluster.ClusterEvent.ClusterDomainEvent
 import akka.cluster.{Cluster, ClusterEvent}
-import akka.pattern.ask
 import akka.util.Timeout
+import my.seedless.api.entities.ClusterNode
+import my.seedless.api.webserver.WriteResult
+
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
@@ -12,14 +14,22 @@ object Main extends App {
   println("startup ...")
 
   val nodeInfo = NodeInfo("managementTest")
-
-  println("running instances")
+  implicit val ec = nodeInfo.system.dispatcher
   implicit val timeout = Timeout(5 seconds)
-  val res = Await.result(
-    nodeInfo.clusterNodes ? httpclient.Register.List,
+  NodeRegistry.init(nodeInfo)
+
+  println("register self")
+  val reg:WriteResult = Await.result(
+    NodeRegistry.register(
+      ClusterNode(
+        host = nodeInfo.config.getString("akka.management.http.hostname"),
+        port = nodeInfo.config.getInt("akka.management.http.port")
+      )
+    ),
     timeout.duration
-  )
-  println(res)
+  ).asInstanceOf[WriteResult]
+  println(reg)
+  println("-----------------")
 
   nodeInfo.startClusterBootstrap()
 
@@ -29,14 +39,15 @@ object Main extends App {
   println("ANY Key?")
   scala.io.StdIn.readLine()
 
+  println("deregister self")
+  Await.result(
+    NodeRegistry.delete(reg.id),
+    timeout.duration
+  )
+
   nodeInfo.shutdown()
 
   println("stopped ...")
-
-}
-
-object sss {
-  import akka.io.{ Dns, IO }
 
 }
 

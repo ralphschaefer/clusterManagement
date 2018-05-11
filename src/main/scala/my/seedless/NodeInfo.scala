@@ -32,7 +32,7 @@ object NodeInfo {
     lazy val httpClusterManagement = AkkaManagement(system)
     lazy val clusterBootstrap = ClusterBootstrap(system)
     lazy val cluster: Cluster = Cluster(system)
-    val clusterNodes: ActorRef = system.actorOf(httpclient.Register.props("clusternodes"))
+    val clusterNodes: ActorRef = system.actorOf(httpclient.Register.props("clusternodes"), "clusternodes")
 
     def startClusterBootstrap() =
     {
