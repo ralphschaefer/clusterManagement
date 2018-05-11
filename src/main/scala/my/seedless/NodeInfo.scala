@@ -1,11 +1,10 @@
 package my.seedless
 
-import akka.actor.{ActorSystem, CoordinatedShutdown}
+import akka.actor.{ActorRef, ActorSystem, CoordinatedShutdown}
 import akka.cluster.Cluster
 import akka.management.AkkaManagement
 import akka.management.cluster.bootstrap.ClusterBootstrap
 import com.typesafe.config.Config
-
 
 
 trait NodeInfo {
@@ -14,6 +13,7 @@ trait NodeInfo {
   val httpClusterManagement: AkkaManagement
   val clusterBootstrap: ClusterBootstrap
   val cluster: Cluster
+  val clusterNodes: ActorRef
 
   def shutdown():Unit = {
     import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,6 +32,8 @@ object NodeInfo {
     lazy val httpClusterManagement = AkkaManagement(system)
     lazy val clusterBootstrap = ClusterBootstrap(system)
     lazy val cluster: Cluster = Cluster(system)
+    val clusterNodes: ActorRef = system.actorOf(httpclient.Register.props("clusternodes"))
+
     def startClusterBootstrap() =
     {
       httpClusterManagement.start()
